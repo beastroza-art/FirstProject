@@ -45,8 +45,16 @@ export interface Order {
   address: string;
   instructions: string;
   paymentMethod: 'visa' | 'mastercard';
-  status: 'received' | 'preparing' | 'on_delivery' | 'delivered';
+  status: 'received' | 'preparing' | 'in_oven' | 'on_delivery' | 'delivered';
   timestamp: string;
+}
+
+export interface FavoriteShortcut {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  items: CartItem[];
 }
 
 export interface Reward {

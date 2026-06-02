@@ -8,13 +8,15 @@ interface CartSectionProps {
   onUpdateQty: (itemId: string, increment: boolean) => void;
   onRemoveItem: (itemId: string) => void;
   onProceedToCheckout: (discountPoints: boolean, couponCode: string) => void;
+  onAddComboUpsell: () => void;
 }
 
 export default function CartSection({
   cartItems,
   onUpdateQty,
   onRemoveItem,
-  onProceedToCheckout
+  onProceedToCheckout,
+  onAddComboUpsell
 }: CartSectionProps) {
 
   const [couponInput, setCouponInput] = useState('');
@@ -36,6 +38,8 @@ export default function CartSection({
   }
 
   const finalTotal = Math.max(0, subtotal + deliveryFee - pointsDiscount - couponDiscount);
+  const hasPizza = cartItems.some((item) => item.pizza.category === 'Premium' || item.pizza.category === 'Clásicas');
+  const hasUpsellItems = cartItems.some((item) => item.pizza.id === 'refresco-1l') && cartItems.some((item) => item.pizza.id === 'torta-chocolate');
 
   const handleApplyCoupon = () => {
     if (couponInput.toUpperCase() === 'PRIME20') {
@@ -149,6 +153,21 @@ export default function CartSection({
 
           {/* Checkout sidebar */}
           <div className="w-full lg:w-96 space-y-6">
+            {hasPizza && !hasUpsellItems && (
+              <div className="bg-[#241a00] text-white rounded-2xl border border-amber-300/30 p-5 shadow-sm space-y-3">
+                <div>
+                  <span className="font-display text-[10px] font-black uppercase tracking-wider text-amber-200">Combo inteligente</span>
+                  <h4 className="font-display font-bold text-lg mt-1">Por $1.990 más agrega bebida + postre</h4>
+                  <p className="font-sans text-xs text-amber-100 mt-1">Oferta sugerida según tus compras anteriores.</p>
+                </div>
+                <button
+                  onClick={onAddComboUpsell}
+                  className="w-full h-10 bg-[#cca730] text-[#241a00] rounded-full font-sans font-black text-xs hover:opacity-90 transition-opacity cursor-pointer"
+                >
+                  Agregar combo
+                </button>
+              </div>
+            )}
             
             {/* Coupon field */}
             <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-2xs space-y-3">

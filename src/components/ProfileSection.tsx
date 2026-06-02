@@ -6,9 +6,10 @@ interface ProfileSectionProps {
   userAddress: string;
   onUpdateAddress: (address: string) => void;
   pastOrders: Order[];
+  onReorderPastOrder: (order: Order) => void;
 }
 
-export default function ProfileSection({ userAddress, onUpdateAddress, pastOrders }: ProfileSectionProps) {
+export default function ProfileSection({ userAddress, onUpdateAddress, pastOrders, onReorderPastOrder }: ProfileSectionProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [addressInput, setAddressInput] = useState(userAddress);
 
@@ -130,8 +131,16 @@ export default function ProfileSection({ userAddress, onUpdateAddress, pastOrder
                 </div>
 
                 <div className="flex md:flex-col justify-between md:text-right items-center md:items-end border-t md:border-t-0 border-gray-100 pt-3 md:pt-0">
-                  <span className="font-sans text-xs text-gray-400">Total cancelado</span>
-                  <span className="font-display font-extrabold text-lg text-[#af101a]">${ord.total.toFixed(2)}</span>
+                  <div>
+                    <span className="font-sans text-xs text-gray-400">Total cancelado</span>
+                    <span className="block font-display font-extrabold text-lg text-[#af101a]">${ord.total.toFixed(2)}</span>
+                  </div>
+                  <button
+                    onClick={() => onReorderPastOrder(ord)}
+                    className="mt-0 md:mt-3 h-9 px-4 rounded-full bg-[#af101a] text-white font-sans font-bold text-xs hover:bg-[#ba1a20] transition-colors cursor-pointer"
+                  >
+                    Pedir nuevamente
+                  </button>
                 </div>
               </div>
             ))}

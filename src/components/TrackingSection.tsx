@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { MapPin, Bike, Home, Store, MessageSquare, ClipboardList, Star, X, Sparkles } from 'lucide-react';
+import { MapPin, Bike, Home, Store, MessageSquare, ClipboardList, Star, X, Sparkles, Flame } from 'lucide-react';
 import { Order } from '../types';
 
 interface TrackingSectionProps {
@@ -18,6 +18,14 @@ export default function TrackingSection({ order, onGoBack }: TrackingSectionProp
   const [newMessage, setNewMessage] = useState('');
 
   const currentStatus = manualStatus ?? order?.status ?? 'preparing';
+  const estimatedMinutesByStatus: Record<Order['status'], number> = {
+    received: 22,
+    preparing: 18,
+    in_oven: 12,
+    on_delivery: 7,
+    delivered: 0
+  };
+  const estimatedMinutes = estimatedMinutesByStatus[currentStatus];
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,9 +60,10 @@ export default function TrackingSection({ order, onGoBack }: TrackingSectionProp
 
   // Status mapping
   const statuses = [
-    { id: 'received', label: 'Recibido', icon: ClipboardList },
-    { id: 'preparing', label: 'Preparación', icon: Sparkles },
-    { id: 'on_delivery', label: 'En camino', icon: Bike },
+    { id: 'received', label: 'Pedido recibido', icon: ClipboardList },
+    { id: 'preparing', label: 'Preparando', icon: Sparkles },
+    { id: 'in_oven', label: 'En horno', icon: Flame },
+    { id: 'on_delivery', label: 'En reparto', icon: Bike },
     { id: 'delivered', label: 'Entregado', icon: Home }
   ] as const;
 
@@ -63,7 +72,8 @@ export default function TrackingSection({ order, onGoBack }: TrackingSectionProp
   // Manual status simulations for user plays!
   const handleAdvanceStatus = () => {
     if (currentStatus === 'received') setManualStatus('preparing');
-    else if (currentStatus === 'preparing') setManualStatus('on_delivery');
+    else if (currentStatus === 'preparing') setManualStatus('in_oven');
+    else if (currentStatus === 'in_oven') setManualStatus('on_delivery');
     else if (currentStatus === 'on_delivery') setManualStatus('delivered');
     else setManualStatus('received');
   };
@@ -93,8 +103,8 @@ export default function TrackingSection({ order, onGoBack }: TrackingSectionProp
           <div 
             className="absolute z-20 transition-all duration-1000 ease-in-out"
             style={{
-              top: currentStatus === 'received' ? '35%' : currentStatus === 'preparing' ? '45%' : currentStatus === 'on_delivery' ? '58%' : '72%',
-              left: currentStatus === 'received' ? '28%' : currentStatus === 'preparing' ? '42%' : currentStatus === 'on_delivery' ? '54%' : '66%'
+              top: currentStatus === 'received' ? '35%' : currentStatus === 'preparing' ? '42%' : currentStatus === 'in_oven' ? '48%' : currentStatus === 'on_delivery' ? '58%' : '72%',
+              left: currentStatus === 'received' ? '28%' : currentStatus === 'preparing' ? '36%' : currentStatus === 'in_oven' ? '44%' : currentStatus === 'on_delivery' ? '54%' : '66%'
             }}
           >
             <div className="relative">
@@ -138,10 +148,10 @@ export default function TrackingSection({ order, onGoBack }: TrackingSectionProp
           {/* Time Estimate header */}
           <div className="text-center space-y-1">
             <span className="font-display font-extrabold text-2xl md:text-3xl text-gray-900">
-              {currentStatus === 'delivered' ? '¡Pedido Entregado!' : 'Llega en 15-20 min'}
+              {currentStatus === 'delivered' ? '¡Pedido Entregado!' : `Tu pedido llegará en ${estimatedMinutes} minutos`}
             </span>
             <p className="font-sans text-xs text-gray-500">
-              {currentStatus === 'delivered' ? 'Disfruta tu deliciosa orden gourmet' : 'Estimado de entrega a las 20:45'}
+              {currentStatus === 'delivered' ? 'Disfruta tu deliciosa orden gourmet' : statuses[activeIndex]?.label}
             </p>
           </div>
 
@@ -154,7 +164,7 @@ export default function TrackingSection({ order, onGoBack }: TrackingSectionProp
             <div 
               className="absolute top-[15px] left-6 h-[3px] bg-[#af101a] rounded-full z-0 transition-all duration-1000 ease-out" 
               style={{
-                width: `${(activeIndex / (statuses.length - 1)) * 90}%`
+                width: `${(activeIndex / (statuses.length - 1)) * 92}%`
               }}
             />
 
@@ -165,7 +175,7 @@ export default function TrackingSection({ order, onGoBack }: TrackingSectionProp
                 const StepIcon = step.icon;
 
                 return (
-                  <div key={step.id} className="flex flex-col items-center">
+                  <div key={step.id} className="flex flex-col items-center w-14">
                     <div 
                       className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-all duration-300 ${
                         isStepCurrent 
@@ -178,11 +188,9 @@ export default function TrackingSection({ order, onGoBack }: TrackingSectionProp
                       <StepIcon size={14} />
                     </div>
                     
-                    {isStepCurrent && (
-                      <span className="absolute -bottom-5 font-display text-[11px] font-bold text-[#af101a] tracking-tight">
-                        {step.label}
-                      </span>
-                    )}
+                    <span className={`mt-2 font-display text-[10px] font-bold leading-tight ${isStepCurrent ? 'text-[#af101a]' : isStepActive ? 'text-gray-700' : 'text-gray-400'}`}>
+                      {step.label}
+                    </span>
                   </div>
                 );
               })}

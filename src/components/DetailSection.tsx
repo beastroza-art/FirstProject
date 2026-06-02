@@ -41,6 +41,11 @@ export default function DetailSection({ pizza, onGoBack, onAddToCart }: DetailSe
     const extra = EXTRAS.find(e => e.id === extraId);
     return sum + (extra ? extra.price : 0);
   }, 0);
+  const selectedExtraDetails = EXTRAS.filter((extra) => selectedExtras.includes(extra.id));
+  const visualToppings = [
+    ...(pizza.name.toLowerCase().includes('pepperoni') ? ['Pepperoni'] : []),
+    ...selectedExtraDetails.map((extra) => extra.name)
+  ];
 
   const singleItemPrice = basePrice + sizeDelta + crustPrice + extrasPrice;
   const totalPrice = singleItemPrice * quantity;
@@ -79,6 +84,16 @@ export default function DetailSection({ pizza, onGoBack, onAddToCart }: DetailSe
           className="w-full h-full object-cover" 
           src={pizza.image} 
         />
+        <div className="absolute inset-x-4 bottom-4 z-10 flex flex-wrap gap-2">
+          {visualToppings.map((topping) => (
+            <span
+              key={topping}
+              className="bg-white/95 backdrop-blur-md text-gray-900 border border-white/60 rounded-full px-3 py-1 font-display text-[10px] font-black shadow-sm"
+            >
+              + {topping}
+            </span>
+          ))}
+        </div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-transparent pointer-events-none"></div>
         
         {/* Floating Navigation */}
@@ -201,7 +216,10 @@ export default function DetailSection({ pizza, onGoBack, onAddToCart }: DetailSe
         {/* Customization (Extras) */}
         <section className="space-y-3">
           <div className="flex justify-between items-center">
-            <h2 className="font-display font-semibold text-sm md:text-base text-gray-900">Extras</h2>
+            <div>
+              <h2 className="font-display font-semibold text-sm md:text-base text-gray-900">Constructor visual</h2>
+              <p className="font-sans text-xs text-gray-500 mt-0.5">La imagen y el total se actualizan al agregar toppings.</p>
+            </div>
             <span className="font-display text-[10px] font-bold text-gray-500 uppercase bg-gray-100 px-2 py-0.5 rounded">Opcional</span>
           </div>
           

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PIZZAS } from './data';
-import { Pizza, CartItem, Order } from './types';
+import { Pizza, CartItem, Order, FavoriteShortcut } from './types';
 
 // Import our custom sub-components
 import SplashSection from './components/SplashSection';
@@ -166,6 +166,117 @@ export default function App() {
     navigateTo('cart');
   };
 
+  const cloneCartItems = (items: CartItem[], source: string) => {
+    return items.map((item, index) => ({
+      ...item,
+      id: `${source}-${item.pizza.id}-${index}-${Date.now()}`,
+      customization: item.customization
+        ? { ...item.customization, extras: [...item.customization.extras] }
+        : undefined
+    }));
+  };
+
+  const favoriteShortcuts: FavoriteShortcut[] = [
+    {
+      id: 'fav-pizza',
+      title: 'Mi Pizza Favorita',
+      description: 'Pepperoni Trufa mediana con queso extra.',
+      image: PIZZAS.find(p => p.id === 'pepperoni-trufa')?.image || PIZZAS[0].image,
+      items: [
+        {
+          id: 'fav-pizza-item',
+          pizza: PIZZAS.find(p => p.id === 'pepperoni-trufa') || PIZZAS[0],
+          customization: { size: 'M', crust: 'Tradicional', extras: ['ext_queso'] },
+          quantity: 1,
+          totalPrice: 24.00
+        }
+      ]
+    },
+    {
+      id: 'fav-combo',
+      title: 'Mi Combo Favorito',
+      description: 'Pizza Prime Special, bebida familiar y postre.',
+      image: PIZZAS.find(p => p.id === 'prime-special')?.image || PIZZAS[0].image,
+      items: [
+        {
+          id: 'fav-combo-pizza',
+          pizza: PIZZAS.find(p => p.id === 'prime-special') || PIZZAS[0],
+          customization: { size: 'L', crust: 'Fina y Crujiente', extras: [] },
+          quantity: 1,
+          totalPrice: 27.99
+        },
+        {
+          id: 'fav-combo-drink',
+          pizza: PIZZAS.find(p => p.id === 'refresco-1l') || PIZZAS[0],
+          quantity: 1,
+          totalPrice: 4.00
+        },
+        {
+          id: 'fav-combo-dessert',
+          pizza: PIZZAS.find(p => p.id === 'torta-chocolate') || PIZZAS[0],
+          quantity: 1,
+          totalPrice: 6.50
+        }
+      ]
+    },
+    {
+      id: 'fav-family',
+      title: 'Pedido Familiar',
+      description: 'Dos pizzas, palitos de ajo y bebida para compartir.',
+      image: PIZZAS.find(p => p.id === 'margherita-prime')?.image || PIZZAS[0].image,
+      items: [
+        {
+          id: 'fav-family-one',
+          pizza: PIZZAS.find(p => p.id === 'margherita-prime') || PIZZAS[0],
+          customization: { size: 'L', crust: 'Tradicional', extras: ['ext_queso'] },
+          quantity: 1,
+          totalPrice: 23.00
+        },
+        {
+          id: 'fav-family-two',
+          pizza: PIZZAS.find(p => p.id === 'classic-pepperoni') || PIZZAS[0],
+          customization: { size: 'L', crust: 'Tradicional', extras: [] },
+          quantity: 1,
+          totalPrice: 18.00
+        },
+        {
+          id: 'fav-family-side',
+          pizza: PIZZAS.find(p => p.id === 'truffle-garlic-bread') || PIZZAS[0],
+          quantity: 1,
+          totalPrice: 11.00
+        },
+        {
+          id: 'fav-family-drink',
+          pizza: PIZZAS.find(p => p.id === 'refresco-1l') || PIZZAS[0],
+          quantity: 1,
+          totalPrice: 4.00
+        }
+      ]
+    }
+  ];
+
+  const handleOrderFavorite = (favorite: FavoriteShortcut) => {
+    setCart(cloneCartItems(favorite.items, favorite.id));
+    navigateTo('cart');
+  };
+
+  const handleReorderPastOrder = (order: Order) => {
+    setCart(cloneCartItems(order.items, `reorder-${order.id}`));
+    navigateTo('cart');
+  };
+
+  const handleAddComboUpsell = () => {
+    const drink = PIZZAS.find(p => p.id === 'refresco-1l');
+    const dessert = PIZZAS.find(p => p.id === 'torta-chocolate');
+    if (!drink || !dessert) return;
+
+    setCart((prevCart) => [
+      ...prevCart,
+      { id: `upsell-drink-${Date.now()}`, pizza: drink, quantity: 1, totalPrice: 1.00 },
+      { id: `upsell-dessert-${Date.now()}`, pizza: dessert, quantity: 1, totalPrice: 0.99 }
+    ]);
+  };
+
   const handleUpdateCartQty = (itemId: string, increment: boolean) => {
     setCart((prevCart) => {
       return prevCart.map((item) => {
@@ -236,7 +347,7 @@ export default function App() {
       address: orderData.address,
       instructions: orderData.instructions,
       paymentMethod: orderData.paymentMethod,
-      status: 'preparing', // Start on preparation
+      status: 'received',
       timestamp: 'Hoy, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
@@ -307,6 +418,10 @@ export default function App() {
                 onSelectCategory={handleSelectCategoryFromHome}
                 onAddToCartDirectly={handleAddToCartDirectly}
                 onSelectPizza={handleSelectPizzaForDetails}
+                favoriteShortcuts={favoriteShortcuts}
+                pastOrders={pastOrders}
+                onOrderFavorite={handleOrderFavorite}
+                onReorderPastOrder={handleReorderPastOrder}
               />
             )}
 
@@ -339,6 +454,7 @@ export default function App() {
                 onUpdateQty={handleUpdateCartQty}
                 onRemoveItem={handleRemoveCartItem}
                 onProceedToCheckout={handleProceedToCheckout}
+                onAddComboUpsell={handleAddComboUpsell}
               />
             )}
 
@@ -366,6 +482,7 @@ export default function App() {
                 userAddress={userAddress}
                 onUpdateAddress={setUserAddress}
                 pastOrders={pastOrders}
+                onReorderPastOrder={handleReorderPastOrder}
               />
             )}
           </motion.div>
